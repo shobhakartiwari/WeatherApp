@@ -48,6 +48,11 @@ WeatherApp is a SwiftUI-based iOS application that allows users to search for an
 - `WeatherAppTests`: Unit tests for the app's functionality.
 - `WeatherAppUITests`: UI tests to ensure the app works correctly.
 
+
+## ScreenShots : 
+<img width="300" alt="Screenshot 2024-09-24 at 11 59 13 AM" src="https://github.com/user-attachments/assets/cadb4d67-ace8-4672-b003-941854d79e27">
+
+
 ## Installation
 
 1. Clone the repository:
