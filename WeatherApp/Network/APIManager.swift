@@ -12,13 +12,21 @@ class APIManager : NetworkManager{
     private init() {}
     
     func getData(url: String) async throws -> [LocationData]? {
-        guard let url = URL(string: url) else { throw Errors.invalidURL }
-        let (data, _) = try await URLSession.shared.data(from: url)
+        guard let url = URL(string: url) else {
+            throw Errors.invalidURL
+        }
+        
         do {
-            let decodedData = try JSONDecoder().decode([LocationData].self, from: data)
-            return decodedData
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return try JSONDecoder().decode([LocationData].self, from: data)
         } catch {
-            throw Errors.decodeError
+            // Here you can handle different types of errors
+            if let decodingError = error as? DecodingError {
+                throw Errors.decodeError
+            } else {
+                // This will catch URLSession errors
+                throw Errors.otherError
+            }
         }
     }
     
