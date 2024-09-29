@@ -34,44 +34,49 @@ struct ContentView: View {
         ZStack {
             BackgroundView()
             ScrollView {
-                LocationListView(locations: viewModel.locations, showAlert: $showAlert, searchText: $searchText)
-                    .task {
-                        await fetchData()
-                    }
-                    .searchable(text: $searchText, prompt: "Search city...")
-                    .onAppear {
-                        if searchText.isEmpty && lastTappedLocation.isEmpty {
-                            // Optionally, show a message or skip the first API call
-                            print("No search text or last tapped location, skipping API call")
-                        } else if searchText.isEmpty {
-                            searchText = lastTappedLocation
-                        }
-                    }
-                    .onChange(of: searchText) { newValue in
-                        // Debounce search text changes
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            Task {
-                                await fetchData()
-                            }
-                        }
-                    }
-                    .alert(isPresented: $showAlert) {
-                        Alert(title: Text("Error"), message: Text("Something went wrong"))
-                    }
-                    .padding()
-            }
-            .refreshable {
-                Task {
-                    try await viewModel.fetchData(url: APIUrls.refreshUrl.rawValue)
+                LocationListView(
+                    locations: viewModel.locations,
+                    showAlert: $showAlert,
+                    searchText: $searchText
+                )
+                .searchable(text: $searchText, prompt: "Search city...")
+                .task { await fetchInitialData() }
+                .onChange(of: searchText, perform: debouncedSearch)
+                .alert("Error", isPresented: $showAlert) {
+                    Text("Something went wrong")
                 }
+                .padding()
             }
+            .refreshable { await refreshData() }
         }
     }
     
-    @MainActor
-    func fetchData() async {
+    private func fetchInitialData() async {
+        if searchText.isEmpty && lastTappedLocation.isEmpty {
+            print("No search text or last tapped location, skipping API call")
+        } else if searchText.isEmpty {
+            searchText = lastTappedLocation
+            await fetchData()
+        }
+    }
+    
+    private func fetchData() async {
         do {
             try await viewModel.fetchData(url: searchedApiUrl)
+        } catch {
+            showAlert = true
+        }
+    }
+    
+    private func debouncedSearch(_ newValue: String) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            Task { await fetchData() }
+        }
+    }
+    
+    private func refreshData() async {
+        do {
+            try await viewModel.fetchData(url: APIUrls.refreshUrl.rawValue)
         } catch {
             showAlert = true
         }
@@ -97,7 +102,7 @@ struct LocationListView: View {
                 })
                 .onAppear {
                     UserDefaults.standard.setValue(location.name, forKey: "lastTappedLocation")
-                    }
+                }
             }
             .padding()
         }
