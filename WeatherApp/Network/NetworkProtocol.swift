@@ -7,6 +7,6 @@
 
 import Foundation
 protocol NetworkManager : AnyObject {
-    func getData(url: String) async throws -> [LocationData]?
-    func getWeatherData(url: String) async throws -> LocationWeatherData?
+    associatedtype T: Decodable
+    func getDataFrom( _ serverUrl: String ) async throws -> T
 }

@@ -30,35 +30,21 @@ enum NetworkError: Error {
     }
 }
 
-class APIManager : NetworkManager {
-    static let shared = APIManager()
+class APIManager<T: Decodable> : NetworkManager {
+    // Use a computed property instead of a static stored property
+    static var shared: APIManager<T> {
+        return APIManager<T>()
+    }
     private init() {}
     
-    func getData(url: String) async throws -> [LocationData]? {
-        guard let url = URL(string: url) else {
-            throw NetworkError.invalidURL(url: url)
+    func getDataFrom( _ serverUrl: String) async throws -> T {
+        guard let url = URL(string: serverUrl) else {
+            throw NetworkError.invalidURL(url: serverUrl)
         }
         
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            return try JSONDecoder().decode([LocationData].self, from: data)
-        } catch {
-            // Here you can handle different types of errors
-            if let decodingError = error as? DecodingError {
-                throw NetworkError.decodingError(description: decodingError.localizedDescription)
-            } else {
-                // This will catch URLSession errors
-                throw NetworkError.networkError(underlying: error)
-            }
-        }
-    }
-    
-    func getWeatherData(url: String) async throws -> LocationWeatherData? {
-        guard let url = URL(string: url) else { throw NetworkError.invalidURL(url: url) }
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let decodedData = try JSONDecoder().decode(LocationWeatherData.self, from: data)
-            return decodedData
+            return try JSONDecoder().decode(T.self, from: data)
         } catch {
             // Here you can handle different types of errors
             if let decodingError = error as? DecodingError {

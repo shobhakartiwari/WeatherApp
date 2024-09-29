@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LocationDetailView: View {
-    @StateObject var viewModel = WeatherDataViewModel(networkManager: APIManager.shared)
+    @StateObject var viewModel = WeatherDataViewModel(network: APIManager.shared)
     var location: LocationData?
     
     var body: some View {
