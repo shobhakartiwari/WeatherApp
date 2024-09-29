@@ -18,7 +18,7 @@ class WeatherDataViewModel: ObservableObject {
         do {
             let data = try await networkManager.getWeatherData(url: url)
             self.weatherData = data
-        } catch let error as Errors {
+        } catch let error as NetworkError {
             throw error
         }
     }
