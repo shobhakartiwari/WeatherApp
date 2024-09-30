@@ -13,23 +13,7 @@ struct ContentView: View {
     @StateObject var viewModel = LocationDataViewModel(networkManager: APIManager.shared)
     @State var searchText = ""
     @State var showAlert = false
-    @State var defaults = UserDefaults.standard
-    
-    private var lastTappedLocation: String {
-        defaults.string(forKey: "lastTappedLocation") ?? ""
-    }
-    
-    private var searchedApiUrl: String {
-        if !searchText.isEmpty {
-            return APIUrls.domainUrl.rawValue+"\(searchText)&limit=5"+APIUrls.API_Key.rawValue
-        } else if !lastTappedLocation.isEmpty {
-            return APIUrls.domainUrl.rawValue+"\(lastTappedLocation)&limit=5"+APIUrls.API_Key.rawValue
-        }
-        else {
-            return APIUrls.refreshUrl.rawValue
-        }
-    }
-    
+            
     var body: some View {
         ZStack {
             BackgroundView()
@@ -41,7 +25,9 @@ struct ContentView: View {
                 )
                 .searchable(text: $searchText, prompt: "Search city...")
                 .task { await fetchInitialData() }
-                .onChange(of: searchText, perform: debouncedSearch)
+                .onChange(of: searchText) { _, newValue in
+                    debouncedSearch(newValue)
+                }
                 .alert("Error", isPresented: $showAlert) {
                     Text("Something went wrong")
                 }
@@ -52,17 +38,15 @@ struct ContentView: View {
     }
     
     private func fetchInitialData() async {
-        if searchText.isEmpty && lastTappedLocation.isEmpty {
-            print("No search text or last tapped location, skipping API call")
-        } else if searchText.isEmpty {
-            searchText = lastTappedLocation
+        if searchText.isEmpty {
+            searchText = viewModel.lastTappedLocation
             await fetchData()
         }
     }
     
     private func fetchData() async {
         do {
-            try await viewModel.fetchData(url: searchedApiUrl)
+            try await viewModel.fetchData(url: viewModel.getLocationAPIUrlFor(searchedString: searchText))
         } catch {
             showAlert = true
         }
