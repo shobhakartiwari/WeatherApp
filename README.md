@@ -10,7 +10,7 @@ WeatherApp is a SwiftUI-based iOS application that allows users to search for an
 - **Coordinator Pattern**: Manages view navigation cleanly and efficiently.
 - **MVVM-C Architecture**: Separation of concerns between UI, business logic, and navigation.
 
-## Project Structure
+## Project Structure-
 
 ### **Common**
 - `Constants`: Stores API-related constants (e.g., API keys, URLs).
